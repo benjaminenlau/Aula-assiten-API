@@ -77,8 +77,21 @@ erDiagram
 
 ## 7. Ejecucion
 
-Requiere JDK 21 y PostgreSQL accesible. En PowerShell, configurar la contrasena
-en el entorno del proceso y arrancar:
+Requiere JDK 21 y PostgreSQL accesible. La aplicacion carga opcionalmente
+`application-local.properties` desde la raiz del proyecto. Este archivo esta
+excluido de Git y contiene `AULA_DB_PASSWORD` con la contrasena local.
+Para otra instalacion, copiar `application-local.example.properties` como
+`application-local.properties` y completar el valor.
+
+Desde IntelliJ, ejecutar `AulaAssistentApiApplication` con el directorio de
+trabajo en la raiz del proyecto. Desde PowerShell en esa misma raiz:
+
+```powershell
+.\gradlew.bat bootRun --console=plain
+```
+
+Como alternativa, configurar la contrasena en el entorno del proceso. Una
+variable `AULA_DB_PASSWORD` ya definida tiene prioridad sobre el archivo local:
 
 ```powershell
 $env:AULA_DB_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Contrasena PostgreSQL' -AsSecureString)).Password
@@ -87,7 +100,8 @@ $env:AULA_DB_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Cont
 
 Por defecto se usa `jdbc:postgresql://localhost:5432/postgres`, usuario
 `postgres`. Se pueden cambiar con `AULA_DB_URL` y `AULA_DB_USER`. La contrasena
-no se guarda en el repositorio. La base destino debe existir: Flyway crea
+se guarda solo en el archivo local ignorado o en el entorno, sin versionarla
+en el repositorio. La base destino debe existir: Flyway crea
 tablas y mantiene `flyway_schema_history`, no crea la base de conexion.
 El arranque aplica V1 una sola vez; los siguientes validan su checksum.
 Despues de aplicar V1, cualquier cambio de esquema debe ir en una migracion
@@ -102,6 +116,10 @@ no usan las tablas de negocio de `public`. La extension compartida
 `btree_gist` puede permanecer instalada. Para ejecutar contra otra instancia,
 definir `AULA_DB_URL` antes del comando. El usuario de pruebas necesita crear
 esquemas e instalar la extension si aun no existe.
+
+Las pruebas de integracion leen `AULA_DB_PASSWORD` directamente del entorno;
+para ejecutarlas se utiliza la alternativa PowerShell anterior, aunque el
+arranque normal tambien admite el archivo local.
 
 La verificacion SQL independiente se ejecuta con `psql` conectado a la base
 migrada y `-v ON_ERROR_STOP=1 -f scripts/verificar_cruces.sql`. Comprueba por
@@ -129,3 +147,10 @@ inicio igual o posterior a fin, recursos inexistentes, fechas nulas y dos
 transacciones concurrentes. El esquema de pruebas se elimina al finalizar.
 La instancia temporal de PostgreSQL 16 fue detenida y eliminada despues de
 validar. La base local conserva V1 y las tres tablas vacias.
+
+## 10. Fase siguiente implementada: API REST
+
+Se agregaron controladores, DTO, mapeadores, servicios transaccionales y manejo
+de errores para espacios, docentes y asignaciones. El contrato, filtros,
+ejemplos, ejecucion y resultados de las 40 pruebas estan en
+[API_REST.md](API_REST.md). La migracion V1 permanece aplicada sin cambios.
