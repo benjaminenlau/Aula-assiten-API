@@ -18,6 +18,9 @@ import java.util.TreeSet;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import com.aula.asistencial.aulaassistentapi.security.AuthDtos;
+import com.aula.asistencial.aulaassistentapi.security.AuthService;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,10 +41,11 @@ import tools.jackson.databind.json.JsonMapper;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiRestIntegrationTests {
 
+    private static final Dotenv DOTENV = Dotenv.configure().ignoreIfMissing().load();
     private static final String SCHEMA = "aula_api_test_" + UUID.randomUUID().toString().replace("-", "");
-    private static final String DATABASE_URL = System.getenv().getOrDefault(
+    private static final String DATABASE_URL = DOTENV.get(
             "AULA_DB_URL", "jdbc:postgresql://localhost:5432/postgres");
-    private static final String USER = System.getenv().getOrDefault("AULA_DB_USER", "postgres");
+    private static final String USER = DOTENV.get("AULA_DB_USER", "postgres");
     private static final String PASSWORD = requiredPassword();
     private static final String TEST_URL = DATABASE_URL
             + (DATABASE_URL.contains("?") ? "&" : "?") + "currentSchema=" + SCHEMA + ",public";
@@ -55,6 +59,11 @@ class ApiRestIntegrationTests {
 
     @Autowired
     private JdbcTemplate jdbc;
+
+    @Autowired
+    private AuthService auth;
+
+    private String token;
 
     private long espacio1;
     private long espacio2;
@@ -74,6 +83,7 @@ class ApiRestIntegrationTests {
         properties.add("spring.flyway.default-schema", () -> SCHEMA);
         properties.add("spring.flyway.schemas", () -> SCHEMA);
         properties.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        properties.add("aula.bootstrap.enabled", () -> "false");
     }
 
     @AfterAll
@@ -90,7 +100,10 @@ class ApiRestIntegrationTests {
     void prepareIndependentResources() {
         assertEquals(SCHEMA, jdbc.queryForObject("SELECT current_schema()", String.class),
                 "The HTTP tests must use their isolated schema before changing any data");
-        jdbc.execute("TRUNCATE asignacion, espacio, docente RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE asignacion, espacio, docente, sesion_usuario, usuario_app RESTART IDENTITY CASCADE");
+        auth.crearUsuario(new AuthDtos.CrearUsuarioRequest(
+                "profesional.api", "Profesional de pruebas", "ClaveSeguraDePrueba123!", AuthDtos.Rol.PROFESIONAL));
+        token = auth.login("profesional.api", "ClaveSeguraDePrueba123!").token();
         espacio1 = insertResource("espacio", "Aula 101");
         espacio2 = insertResource("espacio", "Aula 102");
         docente1 = insertResource("docente", "Docente uno");
@@ -320,6 +333,7 @@ class ApiRestIntegrationTests {
     private HttpResponse<String> request(String method, String path, String payload) throws Exception {
         var builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .timeout(Duration.ofSeconds(10))
+                .header("Authorization", "Bearer " + token)
                 .header("Accept", "application/json, application/problem+json");
         if (payload == null) {
             builder.method(method, HttpRequest.BodyPublishers.noBody());
@@ -411,9 +425,10 @@ class ApiRestIntegrationTests {
     }
 
     private static String requiredPassword() {
-        var password = System.getenv("AULA_DB_PASSWORD");
+        var password = DOTENV.get("AULA_DB_PASSWORD");
         if (password == null || password.isBlank()) {
-            throw new IllegalStateException("Define AULA_DB_PASSWORD to run the PostgreSQL HTTP integration tests");
+            throw new IllegalStateException(
+                    "Define AULA_DB_PASSWORD in .env or the environment to run the PostgreSQL HTTP integration tests");
         }
         return password;
     }

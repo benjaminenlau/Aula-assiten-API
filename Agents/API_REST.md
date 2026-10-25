@@ -1,5 +1,10 @@
 # 1. Fase de API REST
 
+Todas las rutas de negocio requieren ahora `Authorization: Bearer TOKEN`.
+Consultar [inicio de sesion y administracion de cuentas](SEGURIDAD_Y_LOGIN.md)
+para crear el primer administrador, dar acceso a profesionales y gestionar
+la restriccion de una sesion activa por cuenta.
+
 Se implementan servicios transaccionales, DTO, mapeadores, controladores y
 manejo centralizado de errores para el modelo de persistencia confirmado.
 Las rutas propuestas usan nombres en español bajo `/api`.
@@ -139,8 +144,8 @@ consulta previa que pueda quedar desactualizada antes de guardar.
 
 ## 5. Ejecución y verificación
 
-Con JDK 21, PostgreSQL y `application-local.properties` o `AULA_DB_PASSWORD` configurados como en el
-[plan de persistencia](PLAN_ENTIDADES_Y_BD.md):
+Con JDK 21, PostgreSQL y `.env` configurado como en la
+[guia de credenciales](CONFIGURACION_ENV.md):
 
 ```powershell
 .\gradlew.bat bootRun --console=plain

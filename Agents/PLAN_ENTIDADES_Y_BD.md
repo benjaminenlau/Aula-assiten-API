@@ -77,11 +77,10 @@ erDiagram
 
 ## 7. Ejecucion
 
-Requiere JDK 21 y PostgreSQL accesible. La aplicacion carga opcionalmente
-`application-local.properties` desde la raiz del proyecto. Este archivo esta
-excluido de Git y contiene `AULA_DB_PASSWORD` con la contrasena local.
-Para otra instalacion, copiar `application-local.example.properties` como
-`application-local.properties` y completar el valor.
+Requiere JDK 21 y PostgreSQL accesible. La aplicacion carga automaticamente
+`.env` desde el directorio de trabajo. Para otra instalacion, copiar
+`.env.example` como `.env` y completar `AULA_DB_URL`, `AULA_DB_USER` y
+`AULA_DB_PASSWORD`. Consultar la [configuracion de .env](CONFIGURACION_ENV.md).
 
 Desde IntelliJ, ejecutar `AulaAssistentApiApplication` con el directorio de
 trabajo en la raiz del proyecto. Desde PowerShell en esa misma raiz:
@@ -91,7 +90,7 @@ trabajo en la raiz del proyecto. Desde PowerShell en esa misma raiz:
 ```
 
 Como alternativa, configurar la contrasena en el entorno del proceso. Una
-variable `AULA_DB_PASSWORD` ya definida tiene prioridad sobre el archivo local:
+variable `AULA_DB_PASSWORD` ya definida tiene prioridad sobre `.env`:
 
 ```powershell
 $env:AULA_DB_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Contrasena PostgreSQL' -AsSecureString)).Password
@@ -100,8 +99,8 @@ $env:AULA_DB_PASSWORD = [System.Net.NetworkCredential]::new('', (Read-Host 'Cont
 
 Por defecto se usa `jdbc:postgresql://localhost:5432/postgres`, usuario
 `postgres`. Se pueden cambiar con `AULA_DB_URL` y `AULA_DB_USER`. La contrasena
-se guarda solo en el archivo local ignorado o en el entorno, sin versionarla
-en el repositorio. La base destino debe existir: Flyway crea
+se puede configurar en `.env` (ignorado por Git) o en el entorno. Las propiedades
+existentes en `application.properties` se conservan como respaldo. La base destino debe existir: Flyway crea
 tablas y mantiene `flyway_schema_history`, no crea la base de conexion.
 El arranque aplica V1 una sola vez; los siguientes validan su checksum.
 Despues de aplicar V1, cualquier cambio de esquema debe ir en una migracion
@@ -117,9 +116,8 @@ no usan las tablas de negocio de `public`. La extension compartida
 definir `AULA_DB_URL` antes del comando. El usuario de pruebas necesita crear
 esquemas e instalar la extension si aun no existe.
 
-Las pruebas de integracion leen `AULA_DB_PASSWORD` directamente del entorno;
-para ejecutarlas se utiliza la alternativa PowerShell anterior, aunque el
-arranque normal tambien admite el archivo local.
+Las pruebas de integracion tambien leen `.env`; no requieren exportar
+`AULA_DB_PASSWORD` manualmente cuando el archivo esta configurado.
 
 La verificacion SQL independiente se ejecuta con `psql` conectado a la base
 migrada y `-v ON_ERROR_STOP=1 -f scripts/verificar_cruces.sql`. Comprueba por

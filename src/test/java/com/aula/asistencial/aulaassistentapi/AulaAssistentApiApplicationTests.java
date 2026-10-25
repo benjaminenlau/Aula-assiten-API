@@ -22,6 +22,7 @@ import com.aula.asistencial.aulaassistentapi.entity.Espacio;
 import com.aula.asistencial.aulaassistentapi.repository.AsignacionRepository;
 import com.aula.asistencial.aulaassistentapi.repository.DocenteRepository;
 import com.aula.asistencial.aulaassistentapi.repository.EspacioRepository;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,10 +36,11 @@ import org.springframework.test.context.DynamicPropertySource;
 @SpringBootTest
 class AulaAssistentApiApplicationTests {
 
+    private static final Dotenv DOTENV = Dotenv.configure().ignoreIfMissing().load();
     private static final String SCHEMA = "aula_test_" + UUID.randomUUID().toString().replace("-", "");
-    private static final String DATABASE_URL = System.getenv().getOrDefault(
+    private static final String DATABASE_URL = DOTENV.get(
             "AULA_DB_URL", "jdbc:postgresql://localhost:5432/postgres");
-    private static final String USER = System.getenv().getOrDefault("AULA_DB_USER", "postgres");
+    private static final String USER = DOTENV.get("AULA_DB_USER", "postgres");
     private static final String PASSWORD = requiredPassword();
     private static final String TEST_URL = DATABASE_URL
             + (DATABASE_URL.contains("?") ? "&" : "?") + "currentSchema=" + SCHEMA + ",public";
@@ -71,6 +73,7 @@ class AulaAssistentApiApplicationTests {
         properties.add("spring.flyway.default-schema", () -> SCHEMA);
         properties.add("spring.flyway.schemas", () -> SCHEMA);
         properties.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        properties.add("aula.bootstrap.enabled", () -> "false");
     }
 
     @AfterAll
@@ -277,9 +280,10 @@ class AulaAssistentApiApplicationTests {
     }
 
     private static String requiredPassword() {
-        var password = System.getenv("AULA_DB_PASSWORD");
+        var password = DOTENV.get("AULA_DB_PASSWORD");
         if (password == null || password.isBlank()) {
-            throw new IllegalStateException("Define AULA_DB_PASSWORD to run the PostgreSQL integration tests");
+            throw new IllegalStateException(
+                    "Define AULA_DB_PASSWORD in .env or the environment to run the PostgreSQL integration tests");
         }
         return password;
     }

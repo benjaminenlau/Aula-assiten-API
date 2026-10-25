@@ -1,0 +1,2262 @@
+{
+  "info": {
+    "_postman_id": "50df9c41-6cbe-40f4-91a8-3e92ba60228b",
+    "name": "AulaIA API · Recursos y autenticacion",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Coleccion completa del backend AulaIA: 22 combinaciones HTTP/ruta, CRUD, filtros y sesion unica. Importar tambien el entorno AulaIA local y completar sus tres contrasenas. Ver postman/README.md. Orden sugerido: carpetas01 a07. Todas las operaciones son reales. El token y los IDs se guardan automaticamente solo tras respuestas exitosas. No se incluyen credenciales reales ni una cuenta predeterminada habilitada."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:9091",
+      "type": "string"
+    },
+    {
+      "key": "admin_usuario",
+      "value": "administrador",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "",
+      "type": "string",
+      "description": "Completar localmente con AULA_BOOTSTRAP_ADMIN_PASSWORD de .env. No se exportan secretos reales."
+    },
+    {
+      "key": "usuario_nuevo",
+      "value": "profesional.postman",
+      "type": "string",
+      "description": "Cambiar el nombre al repetir el alta: los usuarios desactivados siguen existiendo."
+    },
+    {
+      "key": "usuario_password",
+      "value": "",
+      "type": "string",
+      "description": "Contrasena inicial de prueba elegida por ti (12 a 128 caracteres)."
+    },
+    {
+      "key": "password_nueva",
+      "value": "",
+      "type": "string",
+      "description": "Nueva contrasena del profesional de prueba (12 a 128 caracteres)."
+    },
+    {
+      "key": "inicio",
+      "value": "2026-10-26T08:00:00",
+      "type": "string"
+    },
+    {
+      "key": "fin",
+      "value": "2026-10-26T10:00:00",
+      "type": "string"
+    },
+    {
+      "key": "inicio_actualizado",
+      "value": "2026-10-26T10:00:00",
+      "type": "string"
+    },
+    {
+      "key": "fin_actualizado",
+      "value": "2026-10-26T12:00:00",
+      "type": "string"
+    },
+    {
+      "key": "desde",
+      "value": "2026-10-26T00:00:00",
+      "type": "string"
+    },
+    {
+      "key": "hasta",
+      "value": "2026-11-02T00:00:00",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "Se captura del login200; no definir otra variable token en el entorno."
+    },
+    {
+      "key": "token_expira_en",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "auth_usuario_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "usuario_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "espacio_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "docente_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "asignacion_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 · Autenticacion",
+      "description": "Ejecutar login primero. El token se guarda solo si el login es correcto. Logout esta al final de la coleccion.",
+      "item": [
+        {
+          "name": "POST · Iniciar sesion como administrador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Completa admin_usuario y admin_password con el administrador configurado en el backend. El script construye JSON valido incluso con comillas o barras en la contrasena. No repetir si ya existe una sesion: primero ejecutar logout o esperar caducidad.\n\nRespuesta esperada: HTTP 200.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{admin_usuario}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"admin_usuario\",\"admin_password\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "const payload = JSON.parse(pm.request.body.raw);",
+                  "payload.usuario = String(pm.variables.get('admin_usuario'));",
+                  "payload.password = String(pm.variables.get('admin_password'));",
+                  "pm.request.body.update(JSON.stringify(payload, null, 2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.test('Token Bearer recibido', function () { pm.expect(data.tipo).to.eql('Bearer'); pm.expect(data.token).to.match(/^[A-Za-z0-9_-]{43}$/); });",
+                  "  if (typeof data.token === 'string' && /^[A-Za-z0-9_-]{43}$/.test(data.token)) {",
+                  "    pm.collectionVariables.set('token', data.token);",
+                  "    pm.collectionVariables.set('auth_usuario_id', String(data.usuario.id));",
+                  "    pm.collectionVariables.set('token_expira_en', data.expiraEn);",
+                  "  }",
+                  "}",
+                  "// Un login rechazado (por ejemplo 409) conserva el token anterior."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Consultar mi cuenta",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Devuelve los datos publicos de la cuenta autenticada, sin contrasena ni hash.\n\nRespuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Usuarios (solo ADMIN)",
+      "description": "Cuentas de acceso independientes de los docentes. usuario_id se obtiene al crear una cuenta, nunca del administrador conectado. No existe DELETE de usuarios.",
+      "item": [
+        {
+          "name": "GET · Listar usuarios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista de usuarios', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST · Crear profesional",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "description": "Usuario de 3 a 60 letras, numeros, puntos, guiones o guiones bajos; password de 12 a 128 caracteres. Cambia usuario_nuevo si ese nombre ya existe (409 USUARIO_EXISTENTE). Guarda usuario_id de la respuesta. Para crear otro administrador, cambia rol en el Body a ADMIN.\n\nRespuesta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{usuario_nuevo}}\",\n  \"nombre\": \"Profesional de pruebas Postman\",\n  \"password\": \"{{usuario_password}}\",\n  \"rol\": \"PROFESIONAL\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_nuevo\",\"usuario_password\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "const payload = JSON.parse(pm.request.body.raw);",
+                  "payload.usuario = String(pm.variables.get('usuario_nuevo'));",
+                  "payload.password = String(pm.variables.get('usuario_password'));",
+                  "pm.request.body.update(JSON.stringify(payload, null, 2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const id = pm.response.json().id;",
+                  "  pm.test('ID generado positivo', function () { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); });",
+                  "  if (Number.isSafeInteger(id) && id > 0) pm.collectionVariables.set('usuario_id', String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT · Restablecer contrasena del profesional",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{usuario_id}}/password",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuario_id}}",
+                "password"
+              ]
+            },
+            "description": "Requiere password_nueva de 12 a 128 caracteres. Revoca la sesion del usuario objetivo y reinicia su bloqueo por intentos fallidos. No modifica la cuenta del administrador conectado.\n\nRespuesta esperada: HTTP 204.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"{{password_nueva}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"password_nueva\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({ password: String(pm.variables.get('password_nueva')) }, null, 2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH · Desactivar profesional",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{usuario_id}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuario_id}}",
+                "estado"
+              ]
+            },
+            "description": "Desactiva la cuenta y revoca su sesion. El administrador no puede desactivarse a si mismo.\n\nRespuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH · Activar profesional",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{usuario_id}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuario_id}}",
+                "estado"
+              ]
+            },
+            "description": "La cuenta podra iniciar sesion de nuevo con su contrasena vigente. Esta operacion tambien revoca cualquier sesion anterior.\n\nRespuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Espacios",
+      "description": "Los IDs capturados se reutilizan en consultas, actualizaciones y asignaciones. Los DELETE estan agrupados al final para respetar referencias.",
+      "item": [
+        {
+          "name": "POST · Crear espacio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios"
+              ]
+            },
+            "description": "Nombre obligatorio, no blanco y de hasta 255 caracteres. Guarda el ID creado.\n\nRespuesta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Aula de prueba Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const id = pm.response.json().id;",
+                  "  pm.test('ID generado positivo', function () { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); });",
+                  "  if (Number.isSafeInteger(id) && id > 0) pm.collectionVariables.set('espacio_id', String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Listar espacios",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista JSON', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Obtener espacio por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios/{{espacio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{espacio_id}}"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT · Actualizar espacio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios/{{espacio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{espacio_id}}"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Aula de prueba Postman actualizada\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · Docentes",
+      "description": "Los IDs capturados se reutilizan en consultas, actualizaciones y asignaciones. Los DELETE estan agrupados al final para respetar referencias.",
+      "item": [
+        {
+          "name": "POST · Crear docente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/docentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docentes"
+              ]
+            },
+            "description": "Nombre obligatorio, no blanco y de hasta 255 caracteres. Guarda el ID creado.\n\nRespuesta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Docente de prueba Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const id = pm.response.json().id;",
+                  "  pm.test('ID generado positivo', function () { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); });",
+                  "  if (Number.isSafeInteger(id) && id > 0) pm.collectionVariables.set('docente_id', String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Listar docentes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/docentes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docentes"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista JSON', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Obtener docente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/docentes/{{docente_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docentes",
+                "{{docente_id}}"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT · Actualizar docente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/docentes/{{docente_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docentes",
+                "{{docente_id}}"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Docente de prueba Postman actualizado\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Asignaciones y filtros",
+      "description": "Fechas locales ISO de la sede, sin Z ni conversion UTC. inicio < fin; intervalos [inicio,fin), por lo que horarios contiguos estan permitidos. No se aceptan cruces del mismo espacio o docente.",
+      "item": [
+        {
+          "name": "POST · Crear asignacion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"espacioId\": {{espacio_id}},\n  \"docenteId\": {{docente_id}},\n  \"inicio\": \"{{inicio}}\",\n  \"fin\": \"{{fin}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\",\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\",\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"inicio\",\"fin\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 201', function () { pm.response.to.have.status(201); });",
+                  "if (pm.response.code === 201) {",
+                  "  const id = pm.response.json().id;",
+                  "  pm.test('ID generado positivo', function () { pm.expect(Number.isSafeInteger(id) && id > 0).to.eql(true); });",
+                  "  if (Number.isSafeInteger(id) && id > 0) pm.collectionVariables.set('asignacion_id', String(id));",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Listar todas las asignaciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lista de asignaciones', function () { pm.expect(pm.response.json()).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Obtener asignacion por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones/{{asignacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones",
+                "{{asignacion_id}}"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT · Actualizar asignacion completa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones/{{asignacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones",
+                "{{asignacion_id}}"
+              ]
+            },
+            "description": "PUT requiere todos los campos. Si hay conflicto 409, se mantiene la asignacion anterior.\n\nRespuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"espacioId\": {{espacio_id}},\n  \"docenteId\": {{docente_id}},\n  \"inicio\": \"{{inicio_actualizado}}\",\n  \"fin\": \"{{fin_actualizado}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\",\"espacio_id\",\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\",\"espacio_id\",\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"inicio_actualizado\",\"fin_actualizado\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Filtrar por espacio",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones?espacioId={{espacio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ],
+              "query": [
+                {
+                  "key": "espacioId",
+                  "value": "{{espacio_id}}"
+                }
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Filtrar por docente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones?docenteId={{docente_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ],
+              "query": [
+                {
+                  "key": "docenteId",
+                  "value": "{{docente_id}}"
+                }
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Consultar rango semanal",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones?desde={{desde}}&hasta={{hasta}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "{{desde}}"
+                },
+                {
+                  "key": "hasta",
+                  "value": "{{hasta}}"
+                }
+              ]
+            },
+            "description": "desde y hasta se envian juntos. Devuelve asignaciones que se solapan con el rango, incluidas las que comienzan antes.\n\nRespuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"desde\",\"hasta\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Combinar todos los filtros",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones?espacioId={{espacio_id}}&docenteId={{docente_id}}&desde={{desde}}&hasta={{hasta}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones"
+              ],
+              "query": [
+                {
+                  "key": "espacioId",
+                  "value": "{{espacio_id}}"
+                },
+                {
+                  "key": "docenteId",
+                  "value": "{{docente_id}}"
+                },
+                {
+                  "key": "desde",
+                  "value": "{{desde}}"
+                },
+                {
+                  "key": "hasta",
+                  "value": "{{hasta}}"
+                }
+              ]
+            },
+            "description": "Los cuatro filtros se combinan con AND.\n\nRespuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\",\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\",\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"desde\",\"hasta\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 · Comprobaciones de seguridad",
+      "description": "Ejecutar con la sesion del administrador activa. Estos casos no reemplazan ni borran su token. No se repiten intentos incorrectos para evitar bloquear la cuenta.",
+      "item": [
+        {
+          "name": "POST · Rechazar segundo login simultaneo (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Representa otro cliente usando las mismas credenciales. Debe rechazar el segundo login y conservar el token de la primera sesion. La siguiente consulta debe seguir funcionando.\n\nRespuesta esperada: HTTP 409.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"usuario\": \"{{admin_usuario}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"admin_usuario\",\"admin_password\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "const payload = JSON.parse(pm.request.body.raw);",
+                  "payload.usuario = String(pm.variables.get('admin_usuario'));",
+                  "payload.password = String(pm.variables.get('admin_password'));",
+                  "pm.request.body.update(JSON.stringify(payload, null, 2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 409', function () { pm.response.to.have.status(409); });",
+                  "pm.test('Codigo de error esperado', function () { pm.expect(pm.response.json().codigo).to.be.oneOf([\"SESION_ACTIVA\"]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · La primera sesion sigue activa (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 200."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET · Rechazar acceso sin token (401)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios"
+              ]
+            },
+            "description": "Respuesta esperada: HTTP 401.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Codigo de error esperado', function () { pm.expect(pm.response.json().codigo).to.be.oneOf([\"NO_AUTENTICADO\"]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 · Limpieza y cierre de sesion",
+      "description": "Ejecutar al terminar: primero asignacion, despues espacio/docente. Se desactiva la cuenta de prueba y finalmente se cierra la sesion. No existe DELETE para usuarios.",
+      "item": [
+        {
+          "name": "DELETE · Eliminar asignacion",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/asignaciones/{{asignacion_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "asignaciones",
+                "{{asignacion_id}}"
+              ]
+            },
+            "description": "Elimina el recurso indicado por la variable de la coleccion. En el recorrido recomendado es el recurso creado por estas peticiones. No sustituir el ID por datos que se deseen conservar.\n\nRespuesta esperada: HTTP 204."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"asignacion_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "if (pm.response.code === 204) pm.collectionVariables.unset('asignacion_id');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE · Eliminar espacio",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/espacios/{{espacio_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "espacios",
+                "{{espacio_id}}"
+              ]
+            },
+            "description": "Elimina el recurso indicado por la variable de la coleccion. En el recorrido recomendado es el recurso creado por estas peticiones. No sustituir el ID por datos que se deseen conservar.\n\nRespuesta esperada: HTTP 204."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"espacio_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "if (pm.response.code === 204) pm.collectionVariables.unset('espacio_id');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE · Eliminar docente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/docentes/{{docente_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docentes",
+                "{{docente_id}}"
+              ]
+            },
+            "description": "Elimina el recurso indicado por la variable de la coleccion. En el recorrido recomendado es el recurso creado por estas peticiones. No sustituir el ID por datos que se deseen conservar.\n\nRespuesta esperada: HTTP 204."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"docente_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "if (pm.response.code === 204) pm.collectionVariables.unset('docente_id');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PATCH · Desactivar cuenta de prueba al terminar",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/usuarios/{{usuario_id}}/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "{{usuario_id}}",
+                "estado"
+              ]
+            },
+            "description": "Conserva el registro de la cuenta de prueba pero impide nuevos accesos.\n\nRespuesta esperada: HTTP 200.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"activo\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}",
+                  "for (const key of [\"usuario_id\"]) {",
+                  "  if (!/^[1-9][0-9]*$/.test(String(pm.variables.get(key)))) {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error(key + ' debe ser un ID entero positivo.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST · Cerrar sesion",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json, application/problem+json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revoca el token en el servidor y limpia la copia guardada en esta coleccion. Despues se puede iniciar sesion desde otro cliente. Ejecutar esta peticion antes de abandonar Postman para no dejar una sesion abierta.\n\nRespuesta esperada: HTTP 204."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for (const key of [\"token\"]) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (value === undefined || value === null || String(value).trim() === '') {",
+                  "    pm.execution.skipRequest();",
+                  "    throw new Error('Completa la variable ' + key + ' antes de enviar esta peticion. Consulta postman/README.md.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Estado HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "if (pm.response.code === 204) { pm.collectionVariables.unset('token'); pm.collectionVariables.unset('auth_usuario_id'); pm.collectionVariables.unset('token_expira_en'); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
